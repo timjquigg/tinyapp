@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/timjquigg/tinyapp/issues"
   },
-  "homepage": "https://github.com/timjquigg/tinyapp#readme"
+  "homepage": "https://github.com/timjquigg/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
 }
