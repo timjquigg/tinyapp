@@ -20,8 +20,22 @@
             <%= id %>
           </a>
         </p>
+
+
+
       </div>
-      <div class="card-footer text-muted"></div>
+      <div class="card-footer text-muted ">
+        <h4>Edit</h4>
+        <form class="form-inline" action="/urls/<%= id %>/edit" method="POST">
+          <div class="form-group mb-2">
+            <label for="longURL">Edit URL:</label>
+            <input class="form-control" type="text" name="<%= id %>" value="<%= longURL%>"
+              style="width: 300px; margin: 1em" />
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </div>
+        </form>
+
+      </div>
     </div>
     <!-- Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"

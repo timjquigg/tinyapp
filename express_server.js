@@ -66,11 +66,20 @@ app.get('/u/:id', (req, res) => {
 // CREATE
 //
 
-// Create new short URL
+// Create a new short URL
 app.post('/urls', (req, res) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`/urls/${shortURL}`);
+});
+
+//
+// EDIT
+//
+
+app.post('/urls/:id/edit', (req, res) => {
+  Object.assign(urlDatabase, req.body);
+  res.redirect('/urls');
 });
 
 //
