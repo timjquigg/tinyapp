@@ -8,7 +8,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const { Template } = require('ejs');
-const {generateRandomString} = require('./generate_Random');
+const {generateRandomString, getUserByEmail} = require('./helpers');
 
 //
 // INITIALIZATION
@@ -106,6 +106,17 @@ app.get('/register', (req, res) => {
 
 app.post('/register', (req, res) => {
   const {email, password} = req.body;
+  
+  if (!email || !password) {
+    res.status(400);
+    return res.send('Email & Password must not be blank');
+  }
+
+  if (getUserByEmail(users, email)) {
+    res.status(400);
+    return res.send('Email already exists');
+  }
+
   const id = generateRandomString();
   users[id] = {
     id,
@@ -113,7 +124,6 @@ app.post('/register', (req, res) => {
     password
   };
 
-  console.log(users);
   res.cookie('user_id', id);
   res.redirect('/urls');
 
