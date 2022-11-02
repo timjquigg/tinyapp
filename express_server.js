@@ -140,16 +140,22 @@ app.get('/login' , (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-  // const username = req.body.username;
-  // res.cookie('username', username);
+  const {email, password} = req.body;
+
+  const user = getUserByEmail(users, email);
+  if (user && users[user].password === password) {
+    res.cookie('user_id', user);
+    return res.redirect('/urls');
+  }
+  res.status(403);
+  res.send('E-mail and/or Password incorrect');
   
-  res.redirect('/urls');
 });
 
 // Logout
 app.post('/logout', (req, res) => {
-  // res.clearCookie('username');
-  res.redirect('/urls');
+  res.clearCookie('user_id');
+  res.redirect('/login');
 });
 
 //

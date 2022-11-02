@@ -6,19 +6,25 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-      <div class="navbar-nav">
+      <div class="nav navbar-nav">
         <a class="nav-item nav-link" style="margin: 1em;" href="/urls">My URLs</a>
         <a class="nav-item nav-link" style="margin: 1em;" href="/urls/new">Create New URL</a>
-        <a class="nav-item nav-link" style="margin: 1em;" href="/register">Register</a>
 
         <% if (!users[user]) { %>
+          <a class="nav-item nav-link" style="margin: 1em;" href="/register">Register</a>
           <a class="nav-item nav-link" style="margin: 1em;" href="/login">Login</a>
           <% } else { %>
-            <form class="form-inline" method="POST" action="/logout">
-              <div class="form-group mb-2">
-                <button type="submit" name="username" class="btn btn-primary">Sign Out</button>
-              </div>
-            </form>
+            <div class="nav navbar-nav navbar-right">
+              <h6 style="margin: auto;">
+                Logged in as <%= users[user].email %>!
+              </h6>
+              <form class="form-inline" method="POST" action="/logout">
+                <div class="form-group mb-2">
+                  <button type="submit" name="username" class="btn btn-primary" style="margin-left: 1em">Sign
+                    Out</button>
+                </div>
+              </form>
+            </div>
             <% } %>
       </div>
     </div>

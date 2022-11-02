@@ -16,7 +16,7 @@ const getUserByEmail = (users, email) => {
   for (const user in users) {
     if (users[user].email === email) {
       console.log('e-mail exists!');
-      return true;
+      return user;
     }
   }
   
