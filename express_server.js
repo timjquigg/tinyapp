@@ -80,6 +80,12 @@ app.post('/login', (req, res) => {
   res.redirect('/urls');
 });
 
+// Logout
+app.post('/logout', (req, res) => {
+  res.clearCookie('username');
+  res.redirect('/urls');
+});
+
 //
 // CREATE
 //
