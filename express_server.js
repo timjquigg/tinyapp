@@ -131,9 +131,18 @@ app.post('/register', (req, res) => {
 
 
 // Login
+app.get('/login' , (req, res) => {
+  const templateVars = {
+    users,
+    user: req.cookies.user_id,
+  };
+  res.render('login', templateVars);
+});
+
 app.post('/login', (req, res) => {
-  const username = req.body.username;
+  // const username = req.body.username;
   // res.cookie('username', username);
+  
   res.redirect('/urls');
 });
 

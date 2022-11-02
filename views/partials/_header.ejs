@@ -12,19 +12,10 @@
         <a class="nav-item nav-link" style="margin: 1em;" href="/register">Register</a>
 
         <% if (!users[user]) { %>
-
-          <form class="form-inline" method="POST" action="/login">
-            <div class="form-group mb-2">
-              <input name="username" type="text" class="form-control" style="width: 300px; margin-right: 1em; "
-                placeholder="Username">
-              <button type="submit" class="btn btn-primary">Sign In</button>
-            </div>
-          </form>
+          <a class="nav-item nav-link" style="margin: 1em;" href="/login">Login</a>
           <% } else { %>
             <form class="form-inline" method="POST" action="/logout">
               <div class="form-group mb-2">
-                <label class="nav-item" style="margin: 1em;" for="username">Loged in as: <%= users[user].email %>
-                    </label>
                 <button type="submit" name="username" class="btn btn-primary">Sign Out</button>
               </div>
             </form>
