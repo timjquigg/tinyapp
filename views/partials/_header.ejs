@@ -7,8 +7,17 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">
-        <a class="nav-item nav-link" href="/urls">My URLs</a>
-        <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
+        <a class="nav-item nav-link" style="margin: 1em;" href="/urls">My URLs</a>
+        <a class="nav-item nav-link" style="margin: 1em;" href="/urls/new">Create New URL</a>
+        <form class="form-inline" method="POST" action="/login">
+          <div class="form-group mb-2">
+            <label class="nav-item" style="margin: 1em;" for="username">username:</label>
+            <input name="username" type="text" class="form-control" style="width: 300px; margin-right: 1em">
+            <button type="submit" class="btn btn-primary">Sign In</button>
+          </div>
+        </form>
+        <h5 class="nav-item" style="width 300px; margin: 1em">Logged in as: <%= username %>
+        </h5>
       </div>
     </div>
   </nav>
