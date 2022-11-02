@@ -68,13 +68,26 @@ app.get('/urls', (req, res) => {
   res.render('urls_index', templateVars);
 });
 
-// Create new URL
+// Open Create new URL Page
 app.get('/urls/new', (req, res) => {
   const templateVars = {
     users,
     user: req.cookies.user_id,
   };
-  res.render('urls_new', templateVars);
+  if (req.cookies.user_id in users) {
+    return res.render('urls_new', templateVars);
+  }
+  res.redirect('/login');
+});
+
+// Create a new short URL
+app.post('/urls', (req, res) => {
+  if (req.cookies.user_id in users) {
+    const shortURL = generateRandomString();
+    urlDatabase[shortURL] = req.body.longURL;
+    return res.redirect(`/urls/${shortURL}`);
+  }
+  res.send('User must be logged in to create new tinyURLS');
 });
 
 // Open particular URL by short URL :id
@@ -101,6 +114,11 @@ app.get('/register', (req, res) => {
     users,
     user: req.cookies.user_id,
   };
+  
+  if (req.cookies.user_id in users) {
+    return res.redirect('/urls');
+  }
+
   res.render('register', templateVars);
 });
 
@@ -136,6 +154,11 @@ app.get('/login' , (req, res) => {
     users,
     user: req.cookies.user_id,
   };
+  
+  if (req.cookies.user_id in users) {
+    return res.redirect('/urls');
+  }
+
   res.render('login', templateVars);
 });
 
@@ -158,16 +181,6 @@ app.post('/logout', (req, res) => {
   res.redirect('/login');
 });
 
-//
-// CREATE
-//
-
-// Create a new short URL
-app.post('/urls', (req, res) => {
-  const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
-  res.redirect(`/urls/${shortURL}`);
-});
 
 //
 // EDIT
