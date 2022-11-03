@@ -9,7 +9,7 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
-const { Template, closeDelimiter } = require('ejs');
+// const { Template, closeDelimiter } = require('ejs');
 const {
   generateRandomString,
   getUserByEmail,
@@ -35,10 +35,14 @@ const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
     userID: "aJ48lW",
+    dateCreated: new Date().toLocaleString(),
+    numClicks: 0,
   },
   i3BoGr: {
     longURL: "https://www.google.ca",
     userID: "aJ48lW",
+    dateCreated: new Date().toLocaleString(),
+    numClicks: 0,
   },
 };
 
@@ -179,6 +183,8 @@ app.get('/urls/:id', (req, res) => {
   }
   
   templateVars['longURL'] = urlDatabase[id].longURL;
+  templateVars['dateCreated'] = urlDatabase[id].dateCreated;
+  templateVars['numClicks'] = urlDatabase[id].numClicks;
   return res.render('urls_show', templateVars);
   
 
@@ -196,6 +202,7 @@ app.get('/u/:id', (req, res) => {
     };
     return res.render('error', templateVars);
   }
+  urlDatabase[id].numClicks ++;
   const longURL = urlDatabase[id].longURL;
   res.redirect(longURL);
 });
@@ -238,9 +245,15 @@ app.post('/urls', (req, res) => {
   if (user in users) {
     const shortURL = generateRandomString();
     const longURL = req.body.longURL;
+    const created = new Date();
+    const formatedDate = created.toLocaleString();
+    console.log(created);
+    console.log(created.toLocaleString());
     urlDatabase[shortURL] = {
       longURL: longURL,
       userID: user,
+      dateCreated: formatedDate,
+      numClicks: 0,
     };
     return res.redirect(`/urls/${shortURL}`);
   }
