@@ -2,8 +2,10 @@
 // The goal of this exercise is to implement a basic web server using Express.
 //
 
-
+//
 // Imports
+//
+
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
@@ -28,6 +30,7 @@ app.set('view engine', 'ejs');
 //
 // DATA STORES
 //
+
 const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
@@ -74,6 +77,7 @@ app.post('/login', (req, res) => {
     res.cookie('user_id', user);
     return res.redirect('/urls');
   }
+
   res.status(403);
   const message = 'E-mail and/or Password incorrect';
   const templateVars = {
@@ -81,6 +85,7 @@ app.post('/login', (req, res) => {
     users,
     user: req.cookies.user_id,
   };
+
   res.render('error', templateVars);
 });
 
@@ -102,6 +107,7 @@ app.get('/urls', (req, res) => {
     user
   };
 
+  // If a valid user is logged in
   if (user in users) {
     const URLs = urlsForUser(user, urlDatabase);
     templateVars['urls'] = URLs;
@@ -122,7 +128,11 @@ app.get('/urls', (req, res) => {
 
 // Home
 app.get('/', (req, res) => {
-  res.send('Hello');
+  const user = req.cookies.user_id;
+  if (user in users) {
+    return res.redirect('/urls');
+  }
+  res.redirect('/login');
 });
 
 // Open Create new URL Page
@@ -132,15 +142,18 @@ app.get('/urls/new', (req, res) => {
     users,
     user,
   };
+
+  // If a valid user is logged in
   if (user in users) {
     return res.render('urls_new', templateVars);
   }
+
   const message = 'User needs to be logged in to create URLs';
   templateVars['message'] = message;
   res.render('error', templateVars);
 });
 
-// Open particular URL by short URL :id
+// Open particular URL for editing by short URL :id
 app.get('/urls/:id', (req, res) => {
   const id = req.params.id;
   const user = req.cookies.user_id;
@@ -150,6 +163,7 @@ app.get('/urls/:id', (req, res) => {
     id
   };
   
+  // If a valid user is not logged in
   if (!(user in users)) {
     const message = 'User must be logged in to see Tiny URL';
     templateVars['message'] = message;
@@ -180,7 +194,7 @@ app.get('/u/:id', (req, res) => {
       users,
       user: req.cookies.user_id,
     };
-    return res.render('URL does not exist', templateVars);
+    return res.render('error', templateVars);
   }
   const longURL = urlDatabase[id].longURL;
   res.redirect(longURL);
