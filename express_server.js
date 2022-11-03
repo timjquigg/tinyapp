@@ -66,35 +66,59 @@ app.get('/', (req, res) => {
 
 // Index of URLs
 app.get('/urls', (req, res) => {
+  const user = req.cookies.user_id;
   const templateVars = {
     users,
-    user: req.cookies.user_id,
-    urls: urlDatabase,
+    user
   };
-  res.render('urls_index', templateVars);
+
+  if (user in users) {
+    templateVars['urls'] = urlDatabase;
+    return res.render('urls_index', templateVars);
+  }
+
+  const message = 'User needs to be logged in to see URLs';
+  templateVars['message'] = message;
+  
+  res.render('error', templateVars);
+
 });
 
 // Open Create new URL Page
 app.get('/urls/new', (req, res) => {
+  const user = req.cookies.user_id;
   const templateVars = {
     users,
-    user: req.cookies.user_id,
+    user,
   };
-  if (req.cookies.user_id in users) {
+  if (user in users) {
     return res.render('urls_new', templateVars);
   }
-  res.redirect('/login');
+  const message = 'User needs to be logged in to create URLs';
+  templateVars['message'] = message;
+  res.render('error', templateVars);
 });
 
 // Create a new short URL
 app.post('/urls', (req, res) => {
-  if (req.cookies.user_id in users) {
+  const user = req.cookies.user_id;
+  if (user in users) {
     const shortURL = generateRandomString();
     const longURL = req.body.longURL;
-    urlDatabase[shortURL] = {longURL: longURL};
+    urlDatabase[shortURL] = {
+      longURL: longURL,
+      userID: user,
+    };
+    console.log(urlDatabase);
     return res.redirect(`/urls/${shortURL}`);
   }
-  res.send('User must be logged in to create new tinyURLS');
+  const message = 'User must be logged in to create new tinyURLS';
+  const templateVars = {
+    users,
+    user,
+    message
+  };
+  res.render('error', templateVars);
 });
 
 // Open particular URL by short URL :id
@@ -112,7 +136,13 @@ app.get('/urls/:id', (req, res) => {
 // Redirect to longURL corresponding to short URL :id
 app.get('/u/:id', (req, res) => {
   if (!(req.params.id in urlDatabase)) {
-    return res.send('URL does not exist');
+    const message = 'URL does not exist';
+    const templateVars = {
+      message,
+      users,
+      user: req.cookies.user_id,
+    };
+    return res.render('URL does not exist', templateVars);
   }
   const longURL = urlDatabase[req.params.id].longURL;
   res.redirect(longURL);
@@ -138,12 +168,24 @@ app.post('/register', (req, res) => {
   
   if (!email || !password) {
     res.status(400);
-    return res.send('Email & Password must not be blank');
+    const message = 'Email & Password must not be blank';
+    const templateVars = {
+      message,
+      users,
+      user: req.cookies.user_id
+    };
+    return res.render('error', templateVars);
   }
 
   if (getUserByEmail(users, email)) {
     res.status(400);
-    return res.send('Email already exists');
+    const message = 'Email already exists';
+    const templateVars = {
+      message,
+      users,
+      user: req.cookies.user_id
+    };
+    return res.render('error', templateVars);
   }
 
   const id = generateRandomString();
@@ -182,8 +224,13 @@ app.post('/login', (req, res) => {
     return res.redirect('/urls');
   }
   res.status(403);
-  res.send('E-mail and/or Password incorrect');
-  
+  const message = 'E-mail and/or Password incorrect';
+  const templateVars = {
+    message,
+    users,
+    user: req.cookies.user_id,
+  };
+  res.render('error', templateVars);
 });
 
 // Logout
