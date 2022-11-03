@@ -7,7 +7,7 @@
 //
 
 const express = require('express');
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const morgan = require('morgan');
 const bcrypt = require('bcryptjs');
 const {
@@ -64,7 +64,10 @@ const users = {
 // MIDDLEWARE
 //
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: [generateRandomString(), generateRandomString()],
+}));
 app.use(morgan('dev'));
 
 
@@ -78,7 +81,7 @@ app.post('/login', (req, res) => {
 
   const user = getUserByEmail(users, email);
   if (user && bcrypt.compareSync(password, users[user].password)) {
-    res.cookie('user_id', user);
+    req.session.user_id = user;
     return res.redirect('/urls');
   }
 
@@ -87,7 +90,7 @@ app.post('/login', (req, res) => {
   const templateVars = {
     message,
     users,
-    user: req.cookies.user_id,
+    user: req.session.user_id,
   };
 
   res.render('error', templateVars);
@@ -95,7 +98,7 @@ app.post('/login', (req, res) => {
 
 // Logout
 app.post('/logout', (req, res) => {
-  res.clearCookie('user_id');
+  req.session.user_id = null;
   res.redirect('/login');
 });
 
@@ -105,7 +108,7 @@ app.post('/logout', (req, res) => {
 
 // Index of URLs
 app.get('/urls', (req, res) => {
-  const user = req.cookies.user_id;
+  const user = req.session.user_id;
   const templateVars = {
     users,
     user
@@ -132,7 +135,7 @@ app.get('/urls', (req, res) => {
 
 // Home
 app.get('/', (req, res) => {
-  const user = req.cookies.user_id;
+  const user = req.session.user_id;
   if (user in users) {
     return res.redirect('/urls');
   }
@@ -141,7 +144,7 @@ app.get('/', (req, res) => {
 
 // Open Create new URL Page
 app.get('/urls/new', (req, res) => {
-  const user = req.cookies.user_id;
+  const user = req.session.user_id;
   const templateVars = {
     users,
     user,
@@ -160,7 +163,7 @@ app.get('/urls/new', (req, res) => {
 // Open particular URL for editing by short URL :id
 app.get('/urls/:id', (req, res) => {
   const id = req.params.id;
-  const user = req.cookies.user_id;
+  const user = req.session.user_id;
   const templateVars = {
     users,
     user,
@@ -198,7 +201,7 @@ app.get('/u/:id', (req, res) => {
     const templateVars = {
       message,
       users,
-      user: req.cookies.user_id,
+      user: req.session.user_id,
     };
     return res.render('error', templateVars);
   }
@@ -211,10 +214,10 @@ app.get('/u/:id', (req, res) => {
 app.get('/register', (req, res) => {
   const templateVars = {
     users,
-    user: req.cookies.user_id,
+    user: req.session.user_id,
   };
   
-  if (req.cookies.user_id in users) {
+  if (req.session.user_id in users) {
     return res.redirect('/urls');
   }
 
@@ -225,10 +228,10 @@ app.get('/register', (req, res) => {
 app.get('/login' , (req, res) => {
   const templateVars = {
     users,
-    user: req.cookies.user_id,
+    user: req.session.user_id,
   };
   
-  if (req.cookies.user_id in users) {
+  if (req.session.user_id in users) {
     return res.redirect('/urls');
   }
 
@@ -241,7 +244,7 @@ app.get('/login' , (req, res) => {
 
 // Create a new short URL
 app.post('/urls', (req, res) => {
-  const user = req.cookies.user_id;
+  const user = req.session.user_id;
   if (user in users) {
     const shortURL = generateRandomString();
     const longURL = req.body.longURL;
@@ -276,7 +279,7 @@ app.post('/register', (req, res) => {
     const templateVars = {
       message,
       users,
-      user: req.cookies.user_id
+      user: req.session.user_id
     };
     return res.render('error', templateVars);
   }
@@ -287,7 +290,7 @@ app.post('/register', (req, res) => {
     const templateVars = {
       message,
       users,
-      user: req.cookies.user_id
+      user: req.session.user_id
     };
     return res.render('error', templateVars);
   }
@@ -300,7 +303,7 @@ app.post('/register', (req, res) => {
     password: hashedPassword
   };
 
-  res.cookie('user_id', id);
+  req.session.user_id = id;
   res.redirect('/urls');
 
 });
@@ -314,7 +317,7 @@ app.post('/urls/:id', (req, res) => {
   
   const id = Object.keys(req.body);
   const longURL = req.body[id];
-  const user = req.cookies.user_id;
+  const user = req.session.user_id;
   const templateVars = {
     users,
     user,
@@ -357,7 +360,7 @@ app.post('/urls/:id', (req, res) => {
 // Delete an URL
 app.post('/urls/:id/delete', (req, res) => {
   const id = req.body.id;
-  const user = req.cookies.user_id;
+  const user = req.session.user_id;
   const templateVars = {
     users,
     user,
@@ -365,7 +368,7 @@ app.post('/urls/:id/delete', (req, res) => {
   };
   
   /*
-  The following check would not really be necessary in production code. If edits are only allowed by the logged in owner of an url, checking whether the url exists in the database is irrelavent. Checking the user is logged in and that the url is in the subset of urls owned by this user from the database is all that's really necessary.
+  The following check would not really be necessary in production code. If deletions are only allowed by the logged in owner of an url, checking whether the url exists in the database is irrelavent. Checking the user is logged in and that the url is in the subset of urls owned by this user from the database is all that's really necessary.
   */
   if (!(id in urlDatabase)) {
     const message = 'Tiny URL does not exist';
