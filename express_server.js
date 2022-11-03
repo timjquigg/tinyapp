@@ -9,7 +9,7 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
-// const { Template, closeDelimiter } = require('ejs');
+const bcrypt = require('bcryptjs');
 const {
   generateRandomString,
   getUserByEmail,
@@ -50,12 +50,12 @@ const users = {
   aJ48lW: {
     id: "aJ48lW",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    password: bcrypt.hashSync("purple-monkey-dinosaur", 10),
   },
   aJ48lX: {
     id: "aJ48lX",
     email: "user2@example.com",
-    password: "dishwasher-funk",
+    password: bcrypt.hashSync("dishwasher-funk", 10),
   },
 };
 
@@ -77,7 +77,7 @@ app.post('/login', (req, res) => {
   const {email, password} = req.body;
 
   const user = getUserByEmail(users, email);
-  if (user && users[user].password === password) {
+  if (user && bcrypt.compareSync(password, users[user].password)) {
     res.cookie('user_id', user);
     return res.redirect('/urls');
   }
@@ -292,11 +292,12 @@ app.post('/register', (req, res) => {
     return res.render('error', templateVars);
   }
 
+  const hashedPassword = bcrypt.hashSync(password, 10);
   const id = generateRandomString();
   users[id] = {
     id,
     email,
-    password
+    password: hashedPassword
   };
 
   res.cookie('user_id', id);
