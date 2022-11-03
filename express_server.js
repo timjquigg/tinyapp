@@ -7,8 +7,13 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
-const { Template } = require('ejs');
-const {generateRandomString, getUserByEmail} = require('./helpers');
+const { Template, closeDelimiter } = require('ejs');
+const {
+  generateRandomString,
+  getUserByEmail,
+  urlsForUser
+} = require('./helpers');
+
 
 //
 // INITIALIZATION
@@ -35,17 +40,18 @@ const urlDatabase = {
 };
 
 const users = {
-  userRandomID: {
-    id: "userRandomID",
+  aJ48lW: {
+    id: "aJ48lW",
     email: "user@example.com",
     password: "purple-monkey-dinosaur",
   },
-  user2RandomID: {
-    id: "user2RandomID",
+  aJ48lX: {
+    id: "aJ48lX",
     email: "user2@example.com",
     password: "dishwasher-funk",
   },
 };
+
 
 //
 // MIDDLEWARE
@@ -54,15 +60,39 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan('dev'));
 
+
 //
-// ROUTES
+// AUTHENTICATION
 //
 
-// Home
-app.get('/', (req, res) => {
-  res.send('Hello');
+// Login
+app.post('/login', (req, res) => {
+  const {email, password} = req.body;
+
+  const user = getUserByEmail(users, email);
+  if (user && users[user].password === password) {
+    res.cookie('user_id', user);
+    return res.redirect('/urls');
+  }
+  res.status(403);
+  const message = 'E-mail and/or Password incorrect';
+  const templateVars = {
+    message,
+    users,
+    user: req.cookies.user_id,
+  };
+  res.render('error', templateVars);
 });
 
+// Logout
+app.post('/logout', (req, res) => {
+  res.clearCookie('user_id');
+  res.redirect('/login');
+});
+
+//
+// BROWSE
+//
 
 // Index of URLs
 app.get('/urls', (req, res) => {
@@ -73,7 +103,8 @@ app.get('/urls', (req, res) => {
   };
 
   if (user in users) {
-    templateVars['urls'] = urlDatabase;
+    const URLs = urlsForUser(user, urlDatabase);
+    templateVars['urls'] = URLs;
     return res.render('urls_index', templateVars);
   }
 
@@ -82,6 +113,16 @@ app.get('/urls', (req, res) => {
   
   res.render('error', templateVars);
 
+});
+
+
+//
+// READ
+//
+
+// Home
+app.get('/', (req, res) => {
+  res.send('Hello');
 });
 
 // Open Create new URL Page
@@ -99,43 +140,40 @@ app.get('/urls/new', (req, res) => {
   res.render('error', templateVars);
 });
 
-// Create a new short URL
-app.post('/urls', (req, res) => {
-  const user = req.cookies.user_id;
-  if (user in users) {
-    const shortURL = generateRandomString();
-    const longURL = req.body.longURL;
-    urlDatabase[shortURL] = {
-      longURL: longURL,
-      userID: user,
-    };
-    console.log(urlDatabase);
-    return res.redirect(`/urls/${shortURL}`);
-  }
-  const message = 'User must be logged in to create new tinyURLS';
-  const templateVars = {
-    users,
-    user,
-    message
-  };
-  res.render('error', templateVars);
-});
-
 // Open particular URL by short URL :id
 app.get('/urls/:id', (req, res) => {
   const id = req.params.id;
+  const user = req.cookies.user_id;
   const templateVars = {
     users,
-    user: req.cookies.user_id,
-    id: id,
-    longURL: urlDatabase[id].longURL
+    user,
+    id
   };
-  res.render('urls_show', templateVars);
+  
+  if (!(user in users)) {
+    const message = 'User must be logged in to see Tiny URL';
+    templateVars['message'] = message;
+    res.render('error', templateVars);
+  }
+
+  const userURLs = urlsForUser(user, urlDatabase);
+  
+  if (!(id in userURLs)) {
+    const message = 'URL does not belong to user';
+    templateVars['message'] = message;
+    return res.render('error', templateVars);
+  }
+  
+  templateVars['longURL'] = urlDatabase[id].longURL;
+  return res.render('urls_show', templateVars);
+  
+
 });
 
 // Redirect to longURL corresponding to short URL :id
 app.get('/u/:id', (req, res) => {
-  if (!(req.params.id in urlDatabase)) {
+  const id = req.params.id;
+  if (!(id in urlDatabase)) {
     const message = 'URL does not exist';
     const templateVars = {
       message,
@@ -144,12 +182,11 @@ app.get('/u/:id', (req, res) => {
     };
     return res.render('URL does not exist', templateVars);
   }
-  const longURL = urlDatabase[req.params.id].longURL;
+  const longURL = urlDatabase[id].longURL;
   res.redirect(longURL);
 });
 
-// Register
-
+// Open register page
 app.get('/register', (req, res) => {
   const templateVars = {
     users,
@@ -163,6 +200,46 @@ app.get('/register', (req, res) => {
   res.render('register', templateVars);
 });
 
+// Open Login page
+app.get('/login' , (req, res) => {
+  const templateVars = {
+    users,
+    user: req.cookies.user_id,
+  };
+  
+  if (req.cookies.user_id in users) {
+    return res.redirect('/urls');
+  }
+
+  res.render('login', templateVars);
+});
+
+//
+// ADD
+//
+
+// Create a new short URL
+app.post('/urls', (req, res) => {
+  const user = req.cookies.user_id;
+  if (user in users) {
+    const shortURL = generateRandomString();
+    const longURL = req.body.longURL;
+    urlDatabase[shortURL] = {
+      longURL: longURL,
+      userID: user,
+    };
+    return res.redirect(`/urls/${shortURL}`);
+  }
+  const message = 'User must be logged in to create new tinyURLS';
+  const templateVars = {
+    users,
+    user,
+    message
+  };
+  res.render('error', templateVars);
+});
+
+// Register
 app.post('/register', (req, res) => {
   const {email, password} = req.body;
   
@@ -200,53 +277,47 @@ app.post('/register', (req, res) => {
 
 });
 
-
-// Login
-app.get('/login' , (req, res) => {
-  const templateVars = {
-    users,
-    user: req.cookies.user_id,
-  };
-  
-  if (req.cookies.user_id in users) {
-    return res.redirect('/urls');
-  }
-
-  res.render('login', templateVars);
-});
-
-app.post('/login', (req, res) => {
-  const {email, password} = req.body;
-
-  const user = getUserByEmail(users, email);
-  if (user && users[user].password === password) {
-    res.cookie('user_id', user);
-    return res.redirect('/urls');
-  }
-  res.status(403);
-  const message = 'E-mail and/or Password incorrect';
-  const templateVars = {
-    message,
-    users,
-    user: req.cookies.user_id,
-  };
-  res.render('error', templateVars);
-});
-
-// Logout
-app.post('/logout', (req, res) => {
-  res.clearCookie('user_id');
-  res.redirect('/login');
-});
-
-
 //
 // EDIT
 //
 
-app.post('/urls/:id/edit', (req, res) => {
+// Edit an URL
+app.post('/urls/:id', (req, res) => {
+  
   const id = Object.keys(req.body);
   const longURL = req.body[id];
+  const user = req.cookies.user_id;
+  const templateVars = {
+    users,
+    user,
+    id
+  };
+  
+  /*
+  The following check would not really be necessary in production code. If edits are only allowed by the logged in owner of an url, checking whether the url exists in the database is irrelavent. Checking the user is logged in and that the url is in the subset of urls owned by this user from the database is all that's really necessary.
+  */
+  if (!(id in urlDatabase)) {
+    const message = 'Tiny URL does not exist';
+    templateVars['message'] = message;
+    return res.render('error', templateVars);
+  }
+
+  // If a valid user is not logged in:
+  if (!(user in users)) {
+    const message = 'User must be logged in to edit Tiny URL';
+    templateVars['message'] = message;
+    return res.render('error', templateVars);
+  }
+  
+  const userURLs = urlsForUser(user, urlDatabase);
+  
+  // If the url is not within the subset of urls owned by this user:
+  if (!(id in userURLs)) {
+    const message = 'URL does not belong to user';
+    templateVars['message'] = message;
+    return res.render('error', templateVars);
+  }
+  
   urlDatabase[id].longURL = longURL;
   res.redirect('/urls');
 });
@@ -255,11 +326,47 @@ app.post('/urls/:id/edit', (req, res) => {
 // DELETE
 //
 
+// Delete an URL
 app.post('/urls/:id/delete', (req, res) => {
-  delete urlDatabase[req.body.id];
+  const id = req.body.id;
+  const user = req.cookies.user_id;
+  const templateVars = {
+    users,
+    user,
+    id
+  };
+  
+  /*
+  The following check would not really be necessary in production code. If edits are only allowed by the logged in owner of an url, checking whether the url exists in the database is irrelavent. Checking the user is logged in and that the url is in the subset of urls owned by this user from the database is all that's really necessary.
+  */
+  if (!(id in urlDatabase)) {
+    const message = 'Tiny URL does not exist';
+    templateVars['message'] = message;
+    return res.render('error', templateVars);
+  }
+  
+  // If a valid user is not logged in:
+  if (!(user in users)) {
+    const message = 'User must be logged in to delete Tiny URL';
+    templateVars['message'] = message;
+    return res.render('error', templateVars);
+  }
+
+  const userURLs = urlsForUser(user, urlDatabase);
+
+  // If the url is not within the subset of urls owned by this user:
+  if (!(id in userURLs)) {
+    const message = 'URL does not belong to user';
+    templateVars['message'] = message;
+    return res.render('error', templateVars);
+  }
+
+  delete urlDatabase[id];
   res.redirect('/urls');
 });
 
+
+// Start Server
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });

@@ -15,7 +15,6 @@ const getUserByEmail = (users, email) => {
   
   for (const user in users) {
     if (users[user].email === email) {
-      console.log('e-mail exists!');
       return user;
     }
   }
@@ -23,4 +22,15 @@ const getUserByEmail = (users, email) => {
   return false;
 };
 
-module.exports = { generateRandomString, getUserByEmail };
+const urlsForUser = (id, URLs) => {
+  const userURLs = {};
+
+  for (const URL in URLs) {
+    if (URLs[URL].userID === id) {
+      userURLs[URL] = URLs[URL];
+    }
+  }
+  return userURLs;
+};
+
+module.exports = { generateRandomString, getUserByEmail, urlsForUser };
