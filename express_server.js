@@ -24,8 +24,14 @@ app.set('view engine', 'ejs');
 // DATA STORES
 //
 const urlDatabase = {
-  'b2xVn2': 'http://www.lighthouselabs.ca',
-  '9sm5xK': 'http://www.google.com'
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 
 const users = {
@@ -63,7 +69,7 @@ app.get('/urls', (req, res) => {
   const templateVars = {
     users,
     user: req.cookies.user_id,
-    urls: urlDatabase
+    urls: urlDatabase,
   };
   res.render('urls_index', templateVars);
 });
@@ -84,7 +90,8 @@ app.get('/urls/new', (req, res) => {
 app.post('/urls', (req, res) => {
   if (req.cookies.user_id in users) {
     const shortURL = generateRandomString();
-    urlDatabase[shortURL] = req.body.longURL;
+    const longURL = req.body.longURL;
+    urlDatabase[shortURL] = {longURL: longURL};
     return res.redirect(`/urls/${shortURL}`);
   }
   res.send('User must be logged in to create new tinyURLS');
@@ -92,23 +99,22 @@ app.post('/urls', (req, res) => {
 
 // Open particular URL by short URL :id
 app.get('/urls/:id', (req, res) => {
+  const id = req.params.id;
   const templateVars = {
     users,
     user: req.cookies.user_id,
-    id: req.params.id,
-    longURL: urlDatabase[req.params.id]
+    id: id,
+    longURL: urlDatabase[id].longURL
   };
   res.render('urls_show', templateVars);
 });
 
 // Redirect to longURL corresponding to short URL :id
 app.get('/u/:id', (req, res) => {
-  console.log(req.params.id);
-  console.log(req.params.id in urlDatabase);
   if (!(req.params.id in urlDatabase)) {
     return res.send('URL does not exist');
   }
-  const longURL = urlDatabase[req.params.id];
+  const longURL = urlDatabase[req.params.id].longURL;
   res.redirect(longURL);
 });
 
@@ -192,7 +198,9 @@ app.post('/logout', (req, res) => {
 //
 
 app.post('/urls/:id/edit', (req, res) => {
-  Object.assign(urlDatabase, req.body);
+  const id = Object.keys(req.body);
+  const longURL = req.body[id];
+  urlDatabase[id].longURL = longURL;
   res.redirect('/urls');
 });
 
