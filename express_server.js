@@ -10,6 +10,7 @@ const express = require('express');
 const cookieSession = require('cookie-session');
 const morgan = require('morgan');
 const bcrypt = require('bcryptjs');
+const methodOverride = require('method-override');
 const {
   generateRandomString,
   getUserByEmail,
@@ -63,6 +64,7 @@ const users = {
 //
 // MIDDLEWARE
 //
+app.use(methodOverride('_method'));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieSession({
   name: 'session',
@@ -313,7 +315,7 @@ app.post('/register', (req, res) => {
 //
 
 // Edit an URL
-app.post('/urls/:id', (req, res) => {
+app.put('/urls/:id', (req, res) => {
   
   const id = Object.keys(req.body);
   const longURL = req.body[id];
@@ -358,7 +360,7 @@ app.post('/urls/:id', (req, res) => {
 //
 
 // Delete an URL
-app.post('/urls/:id/delete', (req, res) => {
+app.delete('/urls/:id', (req, res) => {
   const id = req.body.id;
   const user = req.session.user_id;
   const templateVars = {

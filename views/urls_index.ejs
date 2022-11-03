@@ -49,7 +49,7 @@
                 </a>
               </td>
               <td>
-                <form method="POST" action="/urls/<%= id %>/delete">
+                <form method="POST" action="/urls/<%= id %>?_method=DELETE">
                   <button type="submit" name="id" value="<%= id %>">Delete</button>
                 </form>
               </td>

@@ -29,7 +29,7 @@
       </div>
       <div class="card-footer text-muted ">
         <h4>Edit</h4>
-        <form class="form-inline" action="/urls/<%= id %>" method="POST">
+        <form class="form-inline" action="/urls/<%= id %>?_method=PUT" method="POST">
           <div class="form-group mb-2">
             <label for="longURL">Edit URL:</label>
             <input class="form-control" type="text" name="<%= id %>" value="<%= longURL%>"
