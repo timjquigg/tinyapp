@@ -417,6 +417,16 @@ app.delete('/urls/:id', (req, res) => {
   res.redirect('/urls');
 });
 
+// Catch incorrect addresses
+app.get('*', (req, res) => {
+  const message = 'Page does not exist';
+  const templateVars = {
+    users,
+    message,
+    user: req.session.user_id
+  };
+  res.render('error', templateVars);
+});
 
 // Start Server
 app.listen(PORT, () => {
