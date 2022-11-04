@@ -5,7 +5,7 @@
   "main": "express_server.js",
   "scripts": {
     "test": "mocha",
-    "start": "./node_modules/.bin/nodemon -L express_server.js"
+    "start": "node express_server.js"
   },
   "repository": {
     "type": "git",
