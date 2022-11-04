@@ -13,7 +13,7 @@
     <div class="card text-center">
       <div class="card-header"></div>
       <div class="card-body">
-        <h5 class="card-title">TinyURL for: <%= longURL %>
+        <h5 class="card-title">TinyURL for: <%= URL.longURL %>
         </h5>
         <p class="card-text">
           Short URL ID: <a href="/u/<%= id %>">
@@ -21,18 +21,41 @@
           </a>
         </p>
         <p>
-          Date Created: <%= dateCreated %>
+          Date Created: <%= URL.dateCreated %>
         </p>
         <p>
-          Number of Clicks: <%= numClicks %>
+          Total Clicks: <%= URL.numClicks %>
+        </p>
+        <p>
+          Unique Clicks:
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">User</th>
+              <th scope="col">Timestamp</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% for (const visit in URL.uniqueVisits) { %>
+              <tr>
+                <td>
+                  <%= visit %>
+                </td>
+                <td>
+                  <%= URL.uniqueVisits[visit] %>
+                </td>
+                <% } %>
+              </tr>
+          </tbody>
+        </table>
         </p>
       </div>
       <div class="card-footer text-muted ">
         <h4>Edit</h4>
-        <form class="form-inline" action="/urls/<%= id %>?_method=PUT" method="POST">
+        <form class="form-inline" action="/urls/<%= URL.id %>?_method=PUT" method="POST">
           <div class="form-group mb-2">
             <label for="longURL">Edit URL:</label>
-            <input class="form-control" type="text" name="<%= id %>" value="<%= longURL%>"
+            <input class="form-control" type="text" name="<%= URL.id %>" value="<%= URL.longURL%>"
               style="width: 300px; margin: 1em" />
             <button type="submit" class="btn btn-primary">Submit</button>
           </div>

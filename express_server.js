@@ -38,12 +38,14 @@ const urlDatabase = {
     userID: "aJ48lW",
     dateCreated: new Date().toLocaleString(),
     numClicks: 0,
+    uniqueVisits: {},
   },
   i3BoGr: {
     longURL: "https://www.google.ca",
     userID: "aJ48lW",
     dateCreated: new Date().toLocaleString(),
     numClicks: 0,
+    uniqueVisits: {},
   },
 };
 
@@ -187,9 +189,9 @@ app.get('/urls/:id', (req, res) => {
     return res.render('error', templateVars);
   }
   
-  templateVars['longURL'] = urlDatabase[id].longURL;
-  templateVars['dateCreated'] = urlDatabase[id].dateCreated;
-  templateVars['numClicks'] = urlDatabase[id].numClicks;
+  templateVars['URL'] = urlDatabase[id];
+  // templateVars['dateCreated'] = urlDatabase[id].dateCreated;
+  // templateVars['numClicks'] = urlDatabase[id].numClicks;
   return res.render('urls_show', templateVars);
   
 
@@ -207,7 +209,22 @@ app.get('/u/:id', (req, res) => {
     };
     return res.render('error', templateVars);
   }
+
+  let user = req.session.visitor_id;
+  if (!user) {
+    user = generateRandomString();
+    req.session.visitor_id = user;
+  }
+  
+  if (!(user in urlDatabase[id].uniqueVisits)) {
+    const visited = new Date();
+  
+    urlDatabase[id].uniqueVisits[user] = visited.toLocaleString();
+
+  }
+
   urlDatabase[id].numClicks ++;
+
   const longURL = urlDatabase[id].longURL;
   res.redirect(longURL);
 });
@@ -259,6 +276,7 @@ app.post('/urls', (req, res) => {
       userID: user,
       dateCreated: formatedDate,
       numClicks: 0,
+      uniqueVisits: {},
     };
     return res.redirect(`/urls/${shortURL}`);
   }
