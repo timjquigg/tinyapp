@@ -52,10 +52,10 @@
       </div>
       <div class="card-footer text-muted ">
         <h4>Edit</h4>
-        <form class="form-inline" action="/urls/<%= URL.id %>?_method=PUT" method="POST">
+        <form class="form-inline" method="POST" action="/urls/<%= id %>?_method=PUT">
           <div class="form-group mb-2">
             <label for="longURL">Edit URL:</label>
-            <input class="form-control" type="text" name="<%= URL.id %>" value="<%= URL.longURL%>"
+            <input class="form-control" type="text" name="<%= id %>" value="<%= URL.longURL%>"
               style="width: 300px; margin: 1em" />
             <button type="submit" class="btn btn-primary">Submit</button>
           </div>

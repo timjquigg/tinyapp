@@ -17,20 +17,11 @@ const {
   urlsForUser
 } = require('./helpers');
 
-
-//
-// INITIALIZATION
-//
-
-const app = express();
-const PORT = 8080; // default port 8080;
-
-app.set('view engine', 'ejs');
-
-
 //
 // DATA STORES
 //
+
+const PORT = 8080; // default port 8080;
 
 const urlDatabase = {
   b6UTxQ: {
@@ -61,6 +52,14 @@ const users = {
     password: bcrypt.hashSync("dishwasher-funk", 10),
   },
 };
+
+
+//
+// INITIALIZATION
+//
+
+const app = express();
+app.set('view engine', 'ejs');
 
 
 //
@@ -211,8 +210,10 @@ app.get('/u/:id', (req, res) => {
   /*
   The following section is to create unique visitor IDs for tracking and analysis purposes. If a visitor doesn't have a visitor cookie, one is generaterd, a timestamp is also created and the user ID & timestamp are added to the URL database. Number of total clicks is also incremented.
    */
-  let user = req.session.visitor_id;
-  if (!user) {
+  let user;
+  if (req.session.visitor_id) {
+    user = req.session.visitor_id;
+  } else {
     user = generateRandomString();
     req.session.visitor_id = user;
   }
@@ -224,9 +225,9 @@ app.get('/u/:id', (req, res) => {
 
   }
 
-  urlDatabase[id].numClicks ++;
+  urlDatabase[id].numClicks++;
 
-  const longURL = urlDatabase[id].longURL;
+  const {longURL} = urlDatabase[id];
   res.redirect(longURL);
 });
 
@@ -258,6 +259,7 @@ app.get('/login' , (req, res) => {
   res.render('login', templateVars);
 });
 
+
 //
 // ADD
 //
@@ -270,8 +272,6 @@ app.post('/urls', (req, res) => {
     const longURL = req.body.longURL;
     const created = new Date();
     const formatedDate = created.toLocaleString();
-    console.log(created);
-    console.log(created.toLocaleString());
     urlDatabase[shortURL] = {
       longURL: longURL,
       userID: user,
@@ -328,6 +328,7 @@ app.post('/register', (req, res) => {
   res.redirect('/urls');
 
 });
+
 
 //
 // EDIT
