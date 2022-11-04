@@ -183,6 +183,7 @@ app.get('/urls/:id', (req, res) => {
 
   const userURLs = urlsForUser(user, urlDatabase);
   
+  // If the requested URL does not belong to the signed in user
   if (!(id in userURLs)) {
     const message = 'URL does not belong to user';
     templateVars['message'] = message;
@@ -190,8 +191,6 @@ app.get('/urls/:id', (req, res) => {
   }
   
   templateVars['URL'] = urlDatabase[id];
-  // templateVars['dateCreated'] = urlDatabase[id].dateCreated;
-  // templateVars['numClicks'] = urlDatabase[id].numClicks;
   return res.render('urls_show', templateVars);
   
 
@@ -209,7 +208,9 @@ app.get('/u/:id', (req, res) => {
     };
     return res.render('error', templateVars);
   }
-
+  /*
+  The following section is to create unique visitor IDs for tracking and analysis purposes. If a visitor doesn't have a visitor cookie, one is generaterd, a timestamp is also created and the user ID & timestamp are added to the URL database. Number of total clicks is also incremented.
+   */
   let user = req.session.visitor_id;
   if (!user) {
     user = generateRandomString();
